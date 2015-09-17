@@ -1,0 +1,25 @@
+{
+  "name": "crawler_handle_image_node",
+  "version": "1.0.0",
+  "description": "crawler handle image node",
+  "main": "work.js",
+  "dependencies": {
+    "mongodb": "^2.0.43",
+    "redisq": "^0.1.18",
+    "winston": "^1.0.1",
+    "qiniu": "^6.1.8"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://ianzhang001@github.com/liziqing/crawler_handle_image_node.git"
+  },
+  "author": "ianzhang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/liziqing/crawler_handle_image_node/issues"
+  }
+}
