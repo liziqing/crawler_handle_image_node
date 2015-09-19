@@ -8,7 +8,7 @@ var logger = new (winston.Logger)({
     ]
 });
 
-var qiniu_base_url = "http://7xlwqp.com2.z0.glb.qiniucdn.com/";
+var qiniu_base_url = "http://7xlw3a.com2.z0.glb.qiniucdn.com/";
 
 var MongoClient = require('mongodb').MongoClient
   , assert = require('assert');
@@ -19,16 +19,14 @@ var configHandler = require("./confighandler");
 
 var config = configHandler.getConfig();
 
-var Queue = require('bee-queue');
-var queue = Queue('crawler_handle_image', {
-  prefix: 'bq',
-  stallInterval: 5000,
-  redis: {
-    host: config['redis']['host'],
-    port: config['redis']['port']
-  }
-});
-var concurrency = config['concurrency'];
+var redisq = require('redisq');
+redisq.options({redis: {
+  host: config['redis']['host'],
+  port: config['redis']['port']
+}});
+
+var queue = redisq.queue(config['queue_name']),
+    concurrency = config['concurrency'];
 
 qiniu.conf.ACCESS_KEY = config['qiniu']['access_key'];
 qiniu.conf.SECRET_KEY = config['qiniu']['secret_key'];
@@ -37,34 +35,39 @@ var client = new qiniu.rs.Client();
 
 var mongo_url = config["mongodb"]["url"];
 
+var global_queue_cb;
+
 // Use connect method to connect to the Server
 MongoClient.connect(mongo_url, function(err, db) {
 
   logger.info("Connected correctly to server");
 
-  queue.process(concurrency, function(job, cb) 
+  queue.process(function(task, cb) 
   {
-  	// -> { "foo": { "bar": true }, "data": [10, 20] }
-  	var type = job.data.t 
+  	//logger.info(task); // -> { "foo": { "bar": true }, "data": [10, 20] }
+    global_queue_cb = cb;
+
+  	var image_key = task.key
+  	var type = task.t 
 
   	if(type == 'c'){
   		//color
-  		var from_site = job.data.site;
-  		var p_id = job.data.p_id;
-  		var c_name = job.data.c_name;
+  		var from_site = task.site;
+  		var p_id = task.p_id;
+  		var c_name = task.c_name;
 
-      uploadColorImage(db, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+      uploadColorImage(db, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, encodeURIComponent(from_site + "_" + p_id + "_" + c_name), cb);
 
   	} else if (type == 'i'){
   		//item
-      var from_site = job.data.site;
-      var p_id = job.data.p_id;
+      var from_site = task.site;
+      var p_id = task.p_id;
 
-      uploadItemImage(db, {'from_site': from_site, 'show_product_id': p_id}, from_site + "_" + p_id, cb);      
+      uploadItemImage(db, {'from_site': from_site, 'show_product_id': p_id}, encodeURIComponent(from_site + "_" + p_id), cb);      
 
   	}
 
-  });
+  }, concurrency);
 });
 
 var uploadColorImage = function(db, params, key, queue_cb) {
@@ -91,9 +94,9 @@ var uploadColorImage = function(db, params, key, queue_cb) {
         update_images[index][image_key] = images[index][image_key]; 
       }
       
-      update_images[index].image = qiniu_base_url + encodeURIComponent(key + "_" + index);
+      update_images[index].image = qiniu_base_url + key + "_" + index;
     }
-
+    
     var update_params = {
       handle_image: 2,
       images: update_images
@@ -102,9 +105,8 @@ var uploadColorImage = function(db, params, key, queue_cb) {
     if (doc.cover && doc.cover != "")
     {
       update_start_count++;
-      update_params.cover = qiniu_base_url + encodeURIComponent(key + "_cover");
-
-      url = doc.cover      
+      update_params.cover = qiniu_base_url + key + "_cover";
+      url = doc.cover
 
       qiniuUpload(url, "shiji-goods", key + "_cover", queue_cb, function(){
         success_count++;
@@ -117,12 +119,13 @@ var uploadColorImage = function(db, params, key, queue_cb) {
               return queue_cb(err);
             }
 
-            return queue_cb();
+            return queue_cb(null);
           });  
         }
         
       });
     }
+
 
     for (index in images)
     {
@@ -140,8 +143,7 @@ var uploadColorImage = function(db, params, key, queue_cb) {
               return queue_cb(err);
             }
 
-            debugger
-            return queue_cb();
+            return queue_cb(null);
           });  
         }
         
@@ -165,17 +167,15 @@ var uploadItemImage = function(db, params, key, queue_cb) {
     if(url){
 
       qiniuUpload(url, "shiji-goods", key, queue_cb, function(){
-        collection.updateOne(params, {$set: {handle_image: 2, cover: qiniu_base_url + encodeURIComponent(key)}}, function(err, results){
+        collection.updateOne(params, {$set: {handle_image: 2, cover: qiniu_base_url + key}}, function(err, results){
           if (err)
           {
             return queue_cb(err);            
           }
 
-          return queue_cb();
+          return queue_cb(null);
         });
       });  
-    }else{
-      return queue_cb();
     }
 	  
   });
@@ -184,10 +184,9 @@ var uploadItemImage = function(db, params, key, queue_cb) {
 var qiniuUpload = function(url, bucket, key, queue_cb, success_callback)
 {
 	  client.fetch(url, bucket, key, function(err, ret){
-      
   		if (!err) {
       		// 上传成功， 处理返回值
-      		//console.log(ret);
+      		//console.log(ret.key, ret.hash);
       		// ret.key & ret.hash
           
           success_callback();
@@ -196,7 +195,6 @@ var qiniuUpload = function(url, bucket, key, queue_cb, success_callback)
       		logger.error(key + "--" + url + "--" + err)
           //return queue_cb(err);
       		// http://developer.qiniu.com/docs/v6/api/reference/codes.html
-          queue_cb(err)
     	}
   	});
 }
