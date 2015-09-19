@@ -26,7 +26,8 @@ var queue = Queue('crawler_handle_image', {
   redis: {
     host: config['redis']['host'],
     port: config['redis']['port']
-  }
+  },
+  removeOnSuccess: true
 });
 var concurrency = config['concurrency'];
 
