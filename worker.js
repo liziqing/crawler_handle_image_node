@@ -140,7 +140,6 @@ var uploadColorImage = function(db, params, key, queue_cb) {
               return queue_cb(err);
             }
 
-            debugger
             return queue_cb();
           });  
         }
