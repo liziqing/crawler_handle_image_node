@@ -181,22 +181,32 @@ var uploadItemImage = function(db, params, key, queue_cb) {
   });
 }
 
-var qiniuUpload = function(url, bucket, key, queue_cb, success_callback)
+var qiniuUpload = function(url, bucket, key, queue_cb, success_callback, fail_callback)
 {
-	  client.fetch(url, bucket, key, function(err, ret){
+    client.stat(bucket, key, function(err, ret){
+      if (!err)
+      {
+        //如果文件存在，则跳过
+        queue_cb()
+        
+      } else{
+
+        client.fetch(url, bucket, key, function(err, ret){
       
-  		if (!err) {
-      		// 上传成功， 处理返回值
-      		//console.log(ret);
-      		// ret.key & ret.hash
-          
-          success_callback();
-    	} else {
-      		// 上传失败， 处理返回代码
-      		logger.error(key + "--" + url + "--" + err)
-          //return queue_cb(err);
-      		// http://developer.qiniu.com/docs/v6/api/reference/codes.html
-          queue_cb(err)
-    	}
-  	});
+          if (!err) {
+              // 上传成功， 处理返回值
+              //console.log(ret);
+              // ret.key & ret.hash
+              
+              success_callback();
+          } else {
+              // 上传失败， 处理返回代码
+              logger.error(key + "--" + url + "--" + err)
+              //return queue_cb(err);
+              // http://developer.qiniu.com/docs/v6/api/reference/codes.html
+              queue_cb(err)
+          }
+        });
+      }
+    });
 }
