@@ -183,13 +183,13 @@ var uploadItemImage = function(db, params, key, queue_cb) {
 
 var qiniuUpload = function(url, bucket, key, queue_cb, success_callback, fail_callback)
 {
-    client.stat(bucket, key, function(err, ret){
-      if (!err)
-      {
-        //如果文件存在，则跳过
-        queue_cb()
+    // client.stat(bucket, key, function(err, ret){
+    //   if (!err)
+    //   {
+    //     //如果文件存在，则跳过
+    //     queue_cb()
         
-      } else{
+    //   } else{
 
         client.fetch(url, bucket, key, function(err, ret){
       
@@ -207,6 +207,6 @@ var qiniuUpload = function(url, bucket, key, queue_cb, success_callback, fail_ca
               queue_cb(err)
           }
         });
-      }
-    });
+    //   }
+    // });
 }
