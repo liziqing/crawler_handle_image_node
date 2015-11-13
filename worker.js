@@ -25,7 +25,8 @@ var queue = Queue('crawler_handle_image', {
   stallInterval: 5000,
   redis: {
     host: config['redis']['host'],
-    port: config['redis']['port']
+    port: config['redis']['port'],
+    options: config['redis']['options']
   },
   removeOnSuccess: true
 });
