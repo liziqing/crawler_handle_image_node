@@ -40,7 +40,9 @@ var client = new qiniu.rs.Client();
 var mongo_url = config["mongodb"]["url"];
 
 // Use connect method to connect to the Server
-MongoClient.connect(mongo_url, function(err, db) {
+MongoClient.connect(mongo_url, function(err, admin_db) {
+
+  var db = admin_db.db('shiji_shop');
 
   logger.info("Connected correctly to server");
 
