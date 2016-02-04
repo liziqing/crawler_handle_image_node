@@ -59,7 +59,17 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
 
       uploadColorImage(db, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
 
-  	} else if (type == 'i'){
+  	}
+    else if(type == 'c_r'){
+      //color
+      var from_site = job.data.site;
+      var p_id = job.data.p_id;
+      var c_name = job.data.c_name;
+
+      uploadColorImageAgain(db, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+
+    } 
+    else if (type == 'i'){
   		//item
       var from_site = job.data.site;
       var p_id = job.data.p_id;
@@ -70,6 +80,88 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
 
   });
 });
+
+var uploadColorImageAgain = function(db, params, key, queue_cb) {
+  // Get the documents collection
+  var collection = db.collection('goods_colors');
+  // Find some documents
+  collection.findOne(params, function(err, doc) {
+
+    if (err) {
+      return queue_cb(err)
+    }
+
+    var images = doc.images_bak;
+
+    var success_count = 0;
+    var update_start_count = images.length;
+    var update_images = [];
+
+    for (index in images)
+    {
+      update_images[index] = {}
+      for (image_key in images[index])
+      {
+        update_images[index][image_key] = images[index][image_key]; 
+      }
+      
+      update_images[index].image = qiniu_base_url + encodeURIComponent(key + "_" + index);
+    }
+
+    var update_params = {
+      handle_image: 2,
+      images: update_images
+    }
+
+    if (doc.cover_bak && doc.cover_bak != "")
+    {
+      update_start_count++;
+      update_params.cover = qiniu_base_url + encodeURIComponent(key + "_cover");
+
+      url = doc.cover_bak    
+
+      qiniuUpload(url, "shiji-goods", key + "_cover", queue_cb, function(){
+        success_count++;
+
+        if(success_count == update_start_count)
+        {
+          collection.updateMany(params, {$set: update_params}, function(err, results){
+            if (err)
+            {
+              return queue_cb(err);
+            }
+
+            return queue_cb();
+          });  
+        }
+        
+      });
+    }
+
+    for (index in images)
+    {
+      color_image = images[index];
+      url = color_image.image;
+
+      qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(){
+        success_count++;
+
+        if(success_count == update_start_count)
+        {
+          collection.updateMany(params, {$set: update_params}, function(err, results){
+            if (err)
+            {
+              return queue_cb(err);
+            }
+
+            return queue_cb();
+          });  
+        }
+        
+      });
+    }
+  });
+}
 
 var uploadColorImage = function(db, params, key, queue_cb) {
   // Get the documents collection
@@ -186,13 +278,13 @@ var uploadItemImage = function(db, params, key, queue_cb) {
 
 var qiniuUpload = function(url, bucket, key, queue_cb, success_callback, fail_callback)
 {
-    client.stat(bucket, key, function(err, ret){
-      if (!err)
-      {
-        //如果文件存在，则跳过
-        queue_cb()
+    // client.stat(bucket, key, function(err, ret){
+    //   if (!err)
+    //   {
+    //     //如果文件存在，则跳过
+    //     queue_cb()
         
-      } else{
+    //   } else{
 
         client.fetch(url, bucket, key, function(err, ret){
       
@@ -210,6 +302,6 @@ var qiniuUpload = function(url, bucket, key, queue_cb, success_callback, fail_ca
               queue_cb(err);
           }
         });
-      }
-    });
+    //   }
+    // });
 }
