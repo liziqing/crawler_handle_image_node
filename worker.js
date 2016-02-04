@@ -110,6 +110,7 @@ var uploadColorImageAgain = function(db, params, key, queue_cb) {
 
     var update_params = {
       handle_image: 2,
+      rehandle: '2',
       images: update_images
     }
 
