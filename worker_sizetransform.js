@@ -52,6 +52,7 @@ var updateSize = function(db, findParams, updParams, queue_cb){
 	{
 		logger.info('updating size', findParams, updParams)
 	    if (err) {
+	    	logger.error('----', findParams, '----', JSON.stringify(err))
 	        return queue_cb(err);
 	      }
 	    logger.info(doc)
