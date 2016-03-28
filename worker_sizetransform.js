@@ -67,7 +67,7 @@ var updateSize = function(db, findParams, updParams, queue_cb){
 			count_succ++;
 	    	logger.error('Succeed---- num succ', count_succ, '----', findParams, '----', JSON.stringify(err))
 	    }
-	    logger.error(doc)
+//	    logger.error(doc)
 	    return queue_cb();
 	}
 	);
