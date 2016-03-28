@@ -28,7 +28,13 @@ var queue = Queue('size_transform', {
 var concurrency = config['concurrency'];
 
 var mongo_url = config["mongodb"]["url"];
-
+if (mongo_url.match(/\?/)){
+	mongo_url += '&maxPoolSize=100'
+}
+else{
+	mongo_url += '?maxPoolSize=100'
+}
+console.log(mongo_url)
 //Use connect method to connect to the Server
 MongoClient.connect(mongo_url, function(err, admin_db) {
 	  var db = admin_db.db('shiji_shop');
