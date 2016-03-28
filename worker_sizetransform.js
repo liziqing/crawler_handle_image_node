@@ -3,8 +3,8 @@ var winston = require('winston');
 var logger = new (winston.Logger)({
     transports: [
 //      new (winston.transports.Console)(),
-      new (winston.transports.File)({ name: 'error-file', filename: 'error.log', level: 'error' }),
-//      new (winston.transports.File)({ name: 'info-file', filename: 'info.log', level: 'info' })
+      new (winston.transports.File)({ name: 'error-file', filename: 'error_sizetransform.log', level: 'error' }),
+//      new (winston.transports.File)({ name: 'info-file', filename: 'info_sizetransform.log', level: 'info' })
     ]
 });
 var MongoClient = require('mongodb').MongoClient
