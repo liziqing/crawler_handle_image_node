@@ -104,7 +104,7 @@ var qiniuUpload = function(url, bucket, key, queue_cb, success_callback)
       } else {
           // 上传失败， 处理返回代码
           logger.error(key + "--" + url + "--" + err)
-          //return queue_cb(err);
+          queue_cb(err);
           // http://developer.qiniu.com/docs/v6/api/reference/codes.html
       }
     });
