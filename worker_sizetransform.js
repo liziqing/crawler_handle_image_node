@@ -25,15 +25,15 @@ var queue = Queue('size_transform', {
   },
   removeOnSuccess: true
 });
-var concurrency = config['concurrency'];
+var concurrency = 1;//config['concurrency'];
 
 var mongo_url = config["mongodb"]["url"];
 
 //Use connect method to connect to the Server
-var count_succ = 0;
+//var count_succ = 0;
 var count_err = 0;
 MongoClient.connect(mongo_url, 
-	replset:{poolSize:100},
+	{replset:{poolSize:100}},
 	function(err, admin_db) {
 	  var db = admin_db.db('shiji_shop');
 
@@ -60,10 +60,10 @@ var updateSize = function(db, findParams, updParams, queue_cb){
 	    	logger.error('!!Failed---- num err', count_err, '----', findParams, '----', JSON.stringify(err))
 	        return queue_cb(err);
 	      }
-	    else{
-			count_succ++;
-	    	logger.error('Succeed---- num succ', count_succ, '----', findParams, '----', JSON.stringify(err))
-	    }
+//	    else{
+//			count_succ++;
+//	    	logger.error('Succeed---- num succ', count_succ, '----', findParams, '----', JSON.stringify(err))
+//	    }
 	    return queue_cb();
 	}
 	);
