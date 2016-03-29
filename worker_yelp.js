@@ -37,14 +37,12 @@ qiniu.conf.SECRET_KEY = config['qiniu']['secret_key'];
 
 var client = new qiniu.rs.Client();
 
-// var mongo_url = config["mongodb"]["yelp_url"];
-//mongo_url need to be configed
-var mongo_url = 'mongodb://127.0.0.1:27017/shiji_navigation'
+var mongo_url = config["mongodb"]["url"];
 
 // Use connect method to connect to the Server
 MongoClient.connect(mongo_url, function(err, admin_db) {
 
-  var db = admin_db.db('yelp');
+  var db = admin_db.db('shiji_navigation');
 
   logger.info("Connected correctly to server");
 
