@@ -8,7 +8,7 @@ var logger = new (winston.Logger)({
     ]
 });
 
-var qiniu_base_url = "http://7xlw3a.com2.z0.glb.qiniucdn.com/";
+var qiniu_base_url = "http://goods.cdnqiniu02.qnmami.com/";
 
 var MongoClient = require('mongodb').MongoClient
   , assert = require('assert');
