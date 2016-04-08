@@ -65,7 +65,7 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
 
 var uploadYelpImage = function(db, params, key, queue_cb) {
  // Get the documents collection
-  var collection = db.collection('yelp_shopping');
+  var collection = db.collection('shop');
   // Find some documents
   collection.findOne(params, function(err, doc) {
 
@@ -94,6 +94,14 @@ var uploadYelpImage = function(db, params, key, queue_cb) {
 
 var qiniuUpload = function(url, bucket, key, queue_cb, success_callback)
 {
+  client.stat(bucket, key, function(err, ret){
+      if (!err)
+      {
+        //如果文件存在，则跳过
+        queue_cb()
+        
+      } else{
+
     client.fetch(url, bucket, key, function(err, ret){
       if (!err) {
           // 上传成功， 处理返回值
@@ -106,6 +114,8 @@ var qiniuUpload = function(url, bucket, key, queue_cb, success_callback)
           logger.error(key + "--" + url + "--" + err)
           queue_cb(err);
           // http://developer.qiniu.com/docs/v6/api/reference/codes.html
+      }
+    });
       }
     });
 }
