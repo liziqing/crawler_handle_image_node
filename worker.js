@@ -125,7 +125,7 @@ var uploadColorImageAgain = function(db, params, key, queue_cb) {
 
       url = doc.cover_bak    
 
-      qiniuUpload(url, "shiji-goods", key + "_cover", queue_cb, function(){
+      qiniuUpload(url, "shiji-goods", key + "_cover", queue_cb, function(qiniu_finish_key){
         success_count++;
 
         if(success_count == update_start_count)
@@ -158,11 +158,11 @@ var uploadColorImageAgain = function(db, params, key, queue_cb) {
         color_image = images[index];
         url = color_image.image;
 
-        qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(){
+        qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(qiniu_finish_key){
 
-          logger.error(qiniu_base_url + encodeURIComponent(key + "_" + index));
+          logger.error(qiniu_base_url + encodeURIComponent(qiniu_finish_key));
 
-          if((qiniu_base_url + encodeURIComponent(key + "_" + index)) == goods_cover_url){
+          if((qiniu_base_url + encodeURIComponent(qiniu_finish_key)) == goods_cover_url){
             //进行替换cover_info的操作
             replaceGoodsCover(db, goods_cover_url, goods_params, queue_cb);
           }
@@ -251,7 +251,7 @@ var uploadColorImage = function(db, params, key, queue_cb) {
 
       url = doc.cover      
 
-      qiniuUpload(url, "shiji-goods", key + "_cover", queue_cb, function(){
+      qiniuUpload(url, "shiji-goods", key + "_cover", queue_cb, function(qiniu_finish_key){
         success_count++;
 
         if(success_count == update_start_count)
@@ -274,7 +274,7 @@ var uploadColorImage = function(db, params, key, queue_cb) {
       color_image = images[index];
       url = color_image.image;
 
-      qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(){
+      qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(qiniu_finish_key){
         success_count++;
 
         if(success_count == update_start_count)
@@ -308,7 +308,7 @@ var uploadItemImage = function(db, params, key, queue_cb) {
 
     if(url){
 
-      qiniuUpload(url, "shiji-goods", key, queue_cb, function(){
+      qiniuUpload(url, "shiji-goods", key, queue_cb, function(qiniu_finish_key){
         collection.updateOne(params, {$set: {handle_image: 2, cover: qiniu_base_url + encodeURIComponent(key)}}, function(err, results){
           if (err)
           {
@@ -357,7 +357,7 @@ var qiniuUpload = function(url, bucket, key, queue_cb, success_callback, fail_ca
               //console.log(ret);
               // ret.key & ret.hash
               
-              success_callback();
+              success_callback(key);
           } else {
               // 上传失败， 处理返回代码
               logger.error(key + "--" + url + "--" + JSON.stringify(err));
