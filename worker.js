@@ -160,7 +160,7 @@ var uploadColorImageAgain = function(db, params, key, queue_cb) {
 
         qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(qiniu_finish_key){
 
-          logger.error(qiniu_base_url + encodeURIComponent(qiniu_finish_key));
+          //logger.error(qiniu_base_url + encodeURIComponent(qiniu_finish_key));
 
           if((qiniu_base_url + encodeURIComponent(qiniu_finish_key)) == goods_cover_url){
             //进行替换cover_info的操作
@@ -195,7 +195,7 @@ var replaceGoodsCover = function(db, image_url, params, queue_cb) {
 
   qiniuImageInfo(image_url, queue_cb, function(width, height){
 
-    logger.error("width: "+ width + ",height: " + height);
+    logger.error("image: " + image_url + ",width: "+ width + ",height: " + height);
 
     var cover_update_params = {"cover_info" : { "width" : width, "height" : height }};
 
