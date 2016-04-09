@@ -329,6 +329,7 @@ var qiniuImageInfo = function(image_url, queue_cb, success_callback)
       return queue_cb(err); // you need to handle error 
     }
     
+    logger.error(data);
     var width = data.width;
     var height = data.height;
 
