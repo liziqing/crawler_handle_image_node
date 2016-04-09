@@ -1,5 +1,7 @@
 var winston = require('winston');
 
+var urllib = require('urllib');
+
 var logger = new (winston.Logger)({
     transports: [
       //new (winston.transports.Console)(),
@@ -85,6 +87,7 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
 var uploadColorImageAgain = function(db, params, key, queue_cb) {
   // Get the documents collection
   var collection = db.collection('goods_colors');
+  var goods_collection = db.collection('goods');
   // Find some documents
   collection.findOne(params, function(err, doc) {
 
@@ -140,29 +143,70 @@ var uploadColorImageAgain = function(db, params, key, queue_cb) {
       });
     }
 
-    for (index in images)
-    {
-      color_image = images[index];
-      url = color_image.image;
+    var goods_params = {from_site: params['from_site'], show_product_id: params['show_product_id']};
 
-      qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(){
-        success_count++;
+    goods_collection.findOne(goods_params, function(err, doc) {
 
-        if(success_count == update_start_count)
-        {
-          collection.updateMany(params, {$set: update_params}, function(err, results){
-            if (err)
-            {
-              return queue_cb(err);
-            }
+      if (err) {
+        return queue_cb(err)
+      }
 
-            return queue_cb();
-          });  
-        }
-        
-      });
-    }
+      var goods_cover_url = doc.cover;
+      
+      for (index in images)
+      {
+        color_image = images[index];
+        url = color_image.image;
+
+        qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(){
+          if(qiniu_base_url + encodeURIComponent(key + "_" + index) == goods_cover_url){
+            //进行替换cover_info的操作
+            replaceGoodsCover(db, goods_cover_url, goods_params, queue_cb);
+          }
+
+          success_count++;
+
+          if(success_count == update_start_count)
+          {
+            collection.updateMany(params, {$set: update_params}, function(err, results){
+              if (err)
+              {
+                return queue_cb(err);
+              }
+
+              return queue_cb();
+            });  
+          }
+          
+        });
+      }
+      
+    });
+
   });
+}
+
+var replaceGoodsCover = function(db, image_url, params, queue_cb) {
+
+  var goods_collection = db.collection('goods');
+
+  qiniuImageInfo(image_url, queue_cb, function(width, height){
+
+    logger.error("width: "+ width + ",height: " + height);
+
+    var cover_update_params = {"cover_info" : { "width" : width, "height" : height }};
+
+    goods_collection.updateOne(params, {$set: cover_update_params}, function(err, results){
+      if (err)
+      {
+        return queue_cb(err);            
+      }
+
+      return queue_cb();
+    });
+
+  });
+  
 }
 
 var uploadColorImage = function(db, params, key, queue_cb) {
@@ -275,6 +319,20 @@ var uploadItemImage = function(db, params, key, queue_cb) {
       return queue_cb();
     }
 	  
+  });
+}
+
+var qiniuImageInfo = function(image_url, queue_cb, success_callback)
+{
+  urllib.request(image_url + "?imageInfo", function (err, data, res) {
+    if (err) {
+      return queue_cb(err); // you need to handle error 
+    }
+    
+    var width = data.width;
+    var height = data.height;
+
+    success_callback(width, height);
   });
 }
 
