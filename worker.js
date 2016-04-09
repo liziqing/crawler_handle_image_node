@@ -159,6 +159,9 @@ var uploadColorImageAgain = function(db, params, key, queue_cb) {
         url = color_image.image;
 
         qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(){
+
+          logger.error(qiniu_base_url + encodeURIComponent(key + "_" + index));
+
           if((qiniu_base_url + encodeURIComponent(key + "_" + index)) == goods_cover_url){
             //进行替换cover_info的操作
             replaceGoodsCover(db, goods_cover_url, goods_params, queue_cb);
