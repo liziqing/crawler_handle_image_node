@@ -330,8 +330,10 @@ var qiniuImageInfo = function(image_url, queue_cb, success_callback)
     }
     
     logger.error(data);
-    var width = data.width;
-    var height = data.height;
+
+    var dataJson = JSON.parse(data);
+    var width = dataJson.width;
+    var height = dataJson.height;
 
     success_callback(width, height);
   });
