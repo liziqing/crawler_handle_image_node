@@ -3,7 +3,7 @@ var winston = require('winston');
 var logger = new (winston.Logger)({
     transports: [
       //new (winston.transports.Console)(),
-      new (winston.transports.File)({ name: 'error-file', filename: 'error.log', level: 'error' }),
+      new (winston.transports.File)({ name: 'error-file', filename: 'error_yelp.log', level: 'error' }),
       //new (winston.transports.File)({ name: 'info-file', filename: 'info.log', level: 'info' })
     ]
 });
@@ -84,6 +84,7 @@ var uploadYelpImage = function(db, params, key, queue_cb) {
             return queue_cb(err);            
           }
 
+          logger.error(qiniu_base_url + key + " : success");
           return queue_cb(null);
         });
       });  
