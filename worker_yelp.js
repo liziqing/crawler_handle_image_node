@@ -84,7 +84,7 @@ var uploadYelpImage = function(db, params, key, queue_cb) {
             return queue_cb(err);            
           }
 
-          logger.error(qiniu_base_url + key + " : success");
+          //logger.error(qiniu_base_url + key + " : success");
           return queue_cb(null);
         });
       });  
