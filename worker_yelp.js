@@ -60,7 +60,7 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
       var from_site = job.data.from_site;
       var s_id = job.data.s_id;
 
-      uploadYelpImage(db, {'from_site': from_site, 'shop_id': s_id}, qiniu_url_prefix_map[from_site] + "_" + s_id+ "_" + "cover", cb);
+      uploadYelpImage(db, {'from_site': from_site, 'shop_id': s_id}, "shop_cover_"+qiniu_url_prefix_map[from_site] + "_" + s_id+ "_" + "cover", cb);
 
     }
 
