@@ -78,7 +78,7 @@ var uploadYelpImage = function(db, params, key, queue_cb) {
     if(url){
 
       qiniuUpload(url, "shiji-yelp", key, queue_cb, function(){
-        collection.updateOne(params, {$set: {handle_image: '2', cover: qiniu_base_url + key}}, function(err, results){
+        collection.updateOne(params, {$set: {handle_image: 2, cover: qiniu_base_url + key}}, function(err, results){
           if (err)
           {
             return queue_cb(err);            
