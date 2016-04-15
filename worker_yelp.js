@@ -39,6 +39,10 @@ var client = new qiniu.rs.Client();
 
 var mongo_url = config["mongodb"]["url"];
 
+var qiniu_url_prefix_map = {
+  'yelp': 'y'
+}
+
 // Use connect method to connect to the Server
 MongoClient.connect(mongo_url, function(err, admin_db) {
 
@@ -56,7 +60,7 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
       var from_site = job.data.from_site;
       var s_id = job.data.s_id;
 
-      uploadYelpImage(db, {'from_site': from_site, 'shop_id': s_id}, from_site + "_" + s_id+ "_" + "cover", cb);
+      uploadYelpImage(db, {'from_site': from_site, 'shop_id': s_id}, qiniu_url_prefix_map[from_site] + "_" + s_id+ "_" + "cover", cb);
 
     }
 
