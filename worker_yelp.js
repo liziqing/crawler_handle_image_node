@@ -79,7 +79,7 @@ var uploadYelpImage = function(db, params, key, queue_cb) {
 
     url = doc.cover;
 
-    if(url){
+    if(url && url.length > 0){
 
       qiniuUpload(url, "shiji-yelp", key, queue_cb, function(){
         collection.updateOne(params, {$set: {handle_image: 2, cover: qiniu_base_url + key}}, function(err, results){
@@ -92,6 +92,8 @@ var uploadYelpImage = function(db, params, key, queue_cb) {
           return queue_cb(null);
         });
       });  
+    }else{
+      return queue_cb(null);
     }
     
   });
