@@ -4,7 +4,7 @@ var logger = new (winston.Logger)({
     transports: [
 //      new (winston.transports.Console)(),
       new (winston.transports.File)({ name: 'error-file', filename: 'error_sizetransform.log', level: 'error' }),
-//      new (winston.transports.File)({ name: 'info-file', filename: 'info_sizetransform.log', level: 'info' })
+      new (winston.transports.File)({ name: 'info-file', filename: 'info_sizetransform.log', level: 'info' })
     ]
 });
 var MongoClient = require('mongodb').MongoClient
@@ -30,7 +30,7 @@ var concurrency = 1;//config['concurrency'];
 var mongo_url = config["mongodb"]["url"];
 
 //Use connect method to connect to the Server
-//var count_succ = 0;
+var count_succ = 0;
 var count_err = 0;
 MongoClient.connect(mongo_url, 
 	{replset:{poolSize:100}},
@@ -60,10 +60,10 @@ var updateSize = function(db, findParams, updParams, queue_cb){
 	    	logger.error('!!Failed---- num err', count_err, '----', findParams, '----', JSON.stringify(err))
 	        return queue_cb(err);
 	      }
-//	    else{
-//			count_succ++;
-//	    	logger.error('Succeed---- num succ', count_succ, '----', findParams, '----', JSON.stringify(err))
-//	    }
+	    else{
+			count_succ++;
+	    	logger.info('Succeed---- num succ', count_succ, '----', findParams, '----', updParams)
+	    }
 	    return queue_cb();
 	}
 	);
