@@ -151,6 +151,11 @@ var uploadColorImageAgain = function(db, params, key, queue_cb) {
         return queue_cb(err)
       }
 
+      if(doc == null)
+      {
+        return queue_cb()
+      }
+
       var goods_cover_url = doc.cover;
       
       for (index in images)
