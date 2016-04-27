@@ -203,7 +203,7 @@ var replaceGoodsCover = function(db, image_url, params, queue_cb) {
 
   qiniuImageInfo(image_url, queue_cb, function(width, height){
 
-    logger.error("image: " + image_url + ",width: "+ width + ",height: " + height);
+    //logger.error("image: " + image_url + ",width: "+ width + ",height: " + height);
 
     var cover_update_params = {"cover_info" : { "width" : width, "height" : height }};
 
