@@ -162,7 +162,10 @@ var uploadColorImageAgain = function(db, params, key, queue_cb) {
       {
         color_image = images[index];
         url = color_image.image;
-
+        if(url == "")
+        {
+          return queue_cb()
+        }
         qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(qiniu_finish_key){
 
           //logger.error(qiniu_base_url + encodeURIComponent(qiniu_finish_key));
@@ -278,7 +281,10 @@ var uploadColorImage = function(db, params, key, queue_cb) {
     {
       color_image = images[index];
       url = color_image.image;
-
+      if(url == "")
+      {
+        return queue_cb()
+      }
       qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(qiniu_finish_key){
         success_count++;
 
