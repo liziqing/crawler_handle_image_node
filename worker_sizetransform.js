@@ -45,7 +45,8 @@ MongoClient.connect(mongo_url,
   		var size = job.data.size;
   		var s_z = job.data.s_z;
   		var s_t = job.data.s_t;
-  		updateSize(db, {'from_site': site, 'size': size, 's_z':{$exists:true}}, {'s_z': s_z, 's_t': s_t}, cb);
+  		var handle_size;
+  		updateSize(db, {'from_site': site, 'size': size, 'handle_size':'1'}, {'s_z': s_z, 's_t': s_t, 'handle_size': '2'}, cb);
 	  });
 	  });
 	  
