@@ -351,7 +351,7 @@ var uploadItemImage = function(db, p_id, from_site, md5_url, params, key, queue_
         });
       });  
     }else{
-      redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error: no cover' );
+      redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'finished: ' + p_id);
       return queue_cb();
     }
 	  
