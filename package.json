@@ -9,7 +9,8 @@
     "winston": "^1.0.1",
     "qiniu": "^6.1.8",
     "urllib": "^2.8.0",
-    "bee-queue": "^0.3.0"
+    "bee-queue": "^0.3.0",
+    "redis": "^2.5.2"
   },
   "devDependencies": {},
   "scripts": {
@@ -25,3 +26,4 @@
     "url": "https://github.com/liziqing/crawler_handle_image_node/issues"
   }
 }
+
