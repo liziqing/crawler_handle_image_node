@@ -60,7 +60,7 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
   		var p_id = job.data.p_id;
   		var c_name = job.data.c_name;
 
-      uploadColorImage(db, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+      uploadColorImage(db, {'from_site': from_site, 'show_product_id': p_id, 'color_flag': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
 
   	}
     else if(type == 'c_r'){
@@ -69,7 +69,7 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
       var p_id = job.data.p_id;
       var c_name = job.data.c_name;
 
-      uploadColorImageAgain(db, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+      uploadColorImageAgain(db, {'from_site': from_site, 'show_product_id': p_id, 'color_flag': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
 
     } 
     else if (type == 'i'){
