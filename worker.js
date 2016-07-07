@@ -166,13 +166,15 @@ var uploadColorImageAgain = function(db, params, key, queue_cb) {
         {
           return queue_cb()
         }
-        qiniuUpload(url, "shiji-goods", key + "_" + index, queue_cb, function(qiniu_finish_key){
+        qiniuUploadExtra(url, "shiji-goods", key + "_" + index, {'index': index}, queue_cb, function(qiniu_finish_key, options){
 
           //logger.error(qiniu_base_url + encodeURIComponent(qiniu_finish_key));
 
-          if((qiniu_base_url + encodeURIComponent(qiniu_finish_key)) == goods_cover_url){
+          var image_index = options.index;
+
+          if((qiniu_base_url + encodeURIComponent(qiniu_finish_key)) == goods_cover_url || image_index == 0){
             //进行替换cover_info的操作
-            replaceGoodsCover(db, goods_cover_url, goods_params, queue_cb);
+            replaceGoodsCover(db, qiniu_base_url + encodeURIComponent(qiniu_finish_key), goods_params, queue_cb);
           }
 
           success_count++;
@@ -205,7 +207,7 @@ var replaceGoodsCover = function(db, image_url, params, queue_cb) {
 
     //logger.error("image: " + image_url + ",width: "+ width + ",height: " + height);
 
-    var cover_update_params = {"cover_info" : { "width" : width, "height" : height }};
+    var cover_update_params = {"cover_info" : { "width" : width, "height" : height }, "cover": image_url};
 
     goods_collection.updateOne(params, {$set: cover_update_params}, function(err, results){
       if (err)
@@ -349,6 +351,26 @@ var qiniuImageInfo = function(image_url, queue_cb, success_callback)
 
     success_callback(width, height);
   });
+}
+
+var qiniuUploadExtra = function(url, bucket, key, options, queue_cb, success_callback, fail_callback)
+{
+    client.fetch(url, bucket, key, function(err, ret){
+      
+          if (!err) {
+              // 上传成功， 处理返回值
+              //console.log(ret);
+              // ret.key & ret.hash
+              
+              success_callback(key, options);
+          } else {
+              // 上传失败， 处理返回代码
+              logger.error(key + "--" + url + "--" + JSON.stringify(err));
+              //return queue_cb(err);
+              // http://developer.qiniu.com/docs/v6/api/reference/codes.html
+              queue_cb(err);
+          }
+        });
 }
 
 var qiniuUpload = function(url, bucket, key, queue_cb, success_callback, fail_callback)
