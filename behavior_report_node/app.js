@@ -24,7 +24,7 @@ var redis_client = redis.createClient(
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.post('/behavior_report', function (req, res) {
+app.post('/brand_recommend', function (req, res) {
     if (!req.body.type) {
         logger.error("Request body type is empty");
         res.send("Error! Request body type is empty")
@@ -33,8 +33,8 @@ app.post('/behavior_report', function (req, res) {
         var action_type = req.body.type;
         var brand_id = req.body.brand_id;
         var user_id = req.body.user_id;
-        var index_name = 'logstash_brand_recommend';
-        upload_data = {'action_type': action_type, 'brand_id': brand_id, 'user_id': user_id, '@metadata': {'index_name': index_name, 'document_type': action_type}};
+        var index_name = 'logstash-brand-recommend';
+        upload_data = {'message': {'action_type': action_type, 'brand_id': brand_id, 'user_id': user_id}, '@metadata': {'index_name': index_name, 'document_type': action_type}};
         redis_client.rpush('logstash:list', JSON.stringify(upload_data));
         res.send("Success")
     }
