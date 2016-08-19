@@ -1,0 +1,10 @@
+{
+  "operations": {
+    "brand-recommend":[
+      {"action_type": "follow", "fields": ["brand_id", "user_id"]},
+      {"action_type": "unfollow", "fields": ["brand_id", "user_id"]},
+      {"action_type": "brand_detail", "fields": ["brand_id", "user_id"]},
+      {"action_type": "goods_detail", "fields": ["brand_id", "user_id", "goods_id"]}
+    ]
+  }
+}
