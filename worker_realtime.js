@@ -5,7 +5,7 @@ var urllib = require('urllib');
 var logger = new (winston.Logger)({
     transports: [
       //new (winston.transports.Console)(),
-      new (winston.transports.File)({ name: 'error-file', filename: 'error.log', level: 'error' }),
+      new (winston.transports.File)({ name: 'error-file', filename: 'error-realtime.log', level: 'error' }),
       //new (winston.transports.File)({ name: 'info-file', filename: 'info.log', level: 'info' })
     ]
 });
@@ -57,6 +57,7 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
   var db = admin_db.db('shiji_shop');
 
   logger.info("Connected correctly to server");
+
   queue.process(concurrency, function(job, cb)
   {
   	// -> { "foo": { "bar": true }, "data": [10, 20] }
@@ -67,29 +68,44 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
   		var from_site = job.data.site;
   		var p_id = job.data.p_id;
   		var c_name = job.data.c_name;
-        var md5_url = job.data.md5_url;
 
-      uploadColorImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
-
+        if(job.data.worker_type == 'realtime') {
+          var md5_url = job.data.md5_url;
+          uploadColorImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+        }
+        else if(job.data.worker_type == 'json'){
+          var md5_url = 0;
+          uploadColorImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+        }
   	}
     else if(type == 'c_r'){
       //color
       var from_site = job.data.site;
       var p_id = job.data.p_id;
       var c_name = job.data.c_name;
-      var md5_url = job.data.md5_url;
 
-      uploadColorImageAgain(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
-
-    } 
+      if(job.data.worker_type == 'realtime') {
+        var md5_url = job.data.md5_url;
+        uploadColorImageAgain(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+      }
+      else if(job.data.worker_type == 'json'){
+        var md5_url = 0;
+        uploadColorImageAgain(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+      }
+    }
     else if (type == 'i'){
   		//item
       var from_site = job.data.site;
       var p_id = job.data.p_id;
-      var md5_url = job.data.md5_url;
 
-      uploadItemImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id}, from_site + "_" + p_id, cb);
-
+      if(job.data.worker_type == 'realtime') {
+        var md5_url = job.data.md5_url;
+        uploadItemImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id}, from_site + "_" + p_id, cb);
+      }
+      else if(job.data.worker_type == 'json'){
+        var md5_url = 0;
+        uploadItemImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id}, from_site + "_" + p_id, cb);
+      }
   	}
 
   });
@@ -141,8 +157,11 @@ var uploadColorImageAgain = function(db, p_id, from_site, md5_url,  params, key,
 
         if(success_count == update_start_count)
         {
-          redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'finished: ' + p_id);
-          collection.updateMany(params, {$set: update_params}, function(err, results){
+            if (md5_url != 0) {
+                redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'finished: ' + p_id);
+            }
+            collection.updateMany(params, {$set: update_params}, function(err, results){
+
             if (err)
             {
               return queue_cb(err);
@@ -160,14 +179,18 @@ var uploadColorImageAgain = function(db, p_id, from_site, md5_url,  params, key,
     goods_collection.findOne(goods_params, function(err, doc) {
 
       if (err) {
-        redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
-        return queue_cb(err)
+          if (md5_url != 0) {
+              redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+          }
+          return queue_cb(err)
       }
 
       if(doc == null)
       {
-        redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error: cannot find goods');
-        return queue_cb()
+          if (md5_url != 0) {
+              redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error: cannot find goods');
+          }
+          return queue_cb()
       }
 
       var goods_cover_url = doc.cover;
@@ -178,8 +201,10 @@ var uploadColorImageAgain = function(db, p_id, from_site, md5_url,  params, key,
         url = color_image.image;
         if(url == "")
         {
-          redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error: image url error');
-          return queue_cb()
+            if (md5_url != 0) {
+                redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error: image url error');
+            }
+            return queue_cb()
         }
         qiniuUpload(url, 'goods', p_id, from_site, md5_url, "shiji-goods", key + "_" + index, queue_cb, function(qiniu_finish_key){
 
@@ -197,11 +222,15 @@ var uploadColorImageAgain = function(db, p_id, from_site, md5_url,  params, key,
             collection.updateMany(params, {$set: update_params}, function(err, results){
               if (err)
               {
-                redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
-                return queue_cb(err);
+                  if (md5_url != 0) {
+                      redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+                  }
+                  return queue_cb(err);
               }
-              redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'finished: ' + p_id);
-              return queue_cb();
+                if (md5_url != 0) {
+                    redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'finished: ' + p_id);
+                }
+                return queue_cb();
             });
           }
 
@@ -243,7 +272,9 @@ var uploadColorImage = function(db, p_id, from_site, md5_url, params, key, queue
   collection.findOne(params, function(err, doc) {
 
     if (err) {
-      redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+      if (md5_url != 0) {
+        redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+      }
       return queue_cb(err)
     }
 
@@ -284,10 +315,14 @@ var uploadColorImage = function(db, p_id, from_site, md5_url, params, key, queue
           collection.updateOne(params, {$set: update_params}, function(err, results){
             if (err)
             {
-              redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+              if (md5_url != 0) {
+                redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+              }
               return queue_cb(err);
             }
-            redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'finished: ' + p_id);
+            if (md5_url != 0) {
+              redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'finished: ' + p_id);
+            }
             return queue_cb();
           });  
         }
@@ -301,7 +336,9 @@ var uploadColorImage = function(db, p_id, from_site, md5_url, params, key, queue
       url = color_image.image;
       if(url == "")
       {
-        redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error: image url error');
+        if (md5_url != 0) {
+          redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error: image url error');
+        }
         return queue_cb();
       }
       qiniuUpload(url, 'goodscolors', p_id, from_site, md5_url, "shiji-goods", key + "_" + index, queue_cb, function(qiniu_finish_key){
@@ -312,10 +349,14 @@ var uploadColorImage = function(db, p_id, from_site, md5_url, params, key, queue
           collection.updateOne(params, {$set: update_params}, function(err, results){
             if (err)
             {
-              redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+              if (md5_url != 0) {
+                redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+              }
               return queue_cb(err);
             }
-            redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'finished: ' + p_id);
+            if (md5_url != 0) {
+              redis_client.hset('shiji_shop_single_realtime:url:goodscolors', from_site + ':' + md5_url, 'finished: ' + p_id);
+            }
             return queue_cb();
           });  
         }
@@ -332,7 +373,9 @@ var uploadItemImage = function(db, p_id, from_site, md5_url, params, key, queue_
   collection.findOne(params, function(err, doc) {
 
     if (err) {
-      redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+      if (md5_url != 0) {
+        redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+      }
       return queue_cb(err)
     }
   	url = doc.cover;
@@ -342,16 +385,22 @@ var uploadItemImage = function(db, p_id, from_site, md5_url, params, key, queue_
         collection.updateOne(params, {$set: {handle_image: 2, cover: qiniu_base_url + encodeURIComponent(key)}}, function(err, results){
           if (err)
           {
-            redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+            if (md5_url != 0) {
+              redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+            }
             return queue_cb(err);
           }
-          redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'finished: ' + p_id);
+          if (md5_url != 0) {
+            redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'finished: ' + p_id);
+          }
 
           return queue_cb();
         });
       });  
     }else{
-      redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'finished: ' + p_id);
+      if (md5_url != 0) {
+        redis_client.hset('shiji_shop_single_realtime:url:goods', from_site + ':' + md5_url, 'finished: ' + p_id);
+      }
       return queue_cb();
     }
 	  
@@ -393,7 +442,9 @@ var qiniuUpload = function(url, type, p_id, from_site, md5_url, bucket, key, que
           } else {
               // 上传失败， 处理返回代码
               logger.error(key + "--" + url + "--" + JSON.stringify(err));
+            if (md5_url != 0) {
               redis_client.hset('shiji_shop_single_realtime:url:' + type, from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
+            }
               success_callback(key);
               //return queue_cb(err);
               // http://developer.qiniu.com/docs/v6/api/reference/codes.html
