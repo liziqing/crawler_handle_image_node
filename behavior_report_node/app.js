@@ -74,7 +74,7 @@ app.post('/:opid', function (req, res) {
         }
     }
 
-    message_array = req_body;
+    message_array = JSON.parse(JSON.stringify(req_body));
     if (message_array.hasOwnProperty('type'))delete message_array['type'];
     message_array['ip'] = msg_ip;
     message_array['action_type'] = req_body['type'];
