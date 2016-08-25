@@ -25,18 +25,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// app.set('trust proxy', function (ip) {
-//     if (ip === '10.105.57.202' || ip === '10.105.19.248')
-//         return true; // trusted IPs
-//     else
-//         return false;
-// });
-// app.set('trust proxy', function (ip) {
-//     if (ip === '127.0.0.1' || ip === '123.123.123.123') return true; // trusted IPs
-//     else return false;
-// })
+app.set('trust proxy', function (ip) {
+    if (ip === '10.105.57.202' || ip === '10.105.19.248')
+        return true; // trusted IPs
+    else
+        return false;
+});
 
 app.post('/:opid', function (req, res) {
+
     var opid = req.params.opid;
     var index_name = 'logstash-report';
     var message_detail;
@@ -44,7 +41,14 @@ app.post('/:opid', function (req, res) {
     req_headers = req.headers;
     req_cookies = req.cookies;
     req_body = req.body;
-    req_ip = req.ips;
+    req_ips = req.ips;
+    req_ip = req.ip;
+
+    if (req_ips.hasOwnProperty('X_FORWARDED_FOR')){
+        msg_ip = req_ips['X_FORWARDED_FOR']
+    }
+    else
+        msg_ip = req_ip;
 
     var device = req.body['device'];
     if (!device){
@@ -71,7 +75,7 @@ app.post('/:opid', function (req, res) {
     }
 
     message_array = req_body;
-    message_array['ip'] = req_ip;
+    message_array['ip'] = msg_ip;
     message_array['action_type'] = req_body['type'];
     message_array['message'] = message_detail;
     message_array['@metadata'] = {'index_name': index_name, 'document_type': req_body['type']};
