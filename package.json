@@ -12,7 +12,8 @@
     "bee-queue": "^0.3.0",
     "redis": "^2.5.2",
     "express": "^4.14.0",
-    "body-parser": "^1.15.2"
+    "body-parser": "^1.15.2",
+    "cookie-parser": "^1.4.3"
   },
   "devDependencies": {},
   "scripts": {

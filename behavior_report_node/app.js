@@ -3,6 +3,7 @@ var app = express();
 var redis = require('redis');
 var winston = require('winston');
 var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
 
 var logger = new (winston.Logger)({
     transports: [
@@ -15,56 +16,75 @@ var logger = new (winston.Logger)({
 var configHandler = require("./confighandler");
 
 var config = configHandler.getConfig();
-var ops = configHandler.getops();
 var redis_client = redis.createClient(
     config['redis']['port'],
     config['redis']['host'],
     config['redis']['options']);
-var rs = Object.keys(ops['operations']);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-app.post('/:r', function (req, res) {
-    var r = req.params.r;
-    var is_correct_rout = false;
-    for (var i = 0; i < rs.length; i++) {
-        if (rs[i] == r) {
-            is_correct_rout = true;
-            if (!req.body.type) {
-                logger.error("Request type is empty");
-                res.send("Error! Request type is empty")
-            }
-            else {
-                var is_correct_operations = false;
-                for (var j = 0; j < ops['operations'][r].length; j++){
-                    if (ops['operations'][r][j]['action_type'] == req.body.type) {
-                        is_correct_operations = true;
-                        var fields = ops['operations'][r][j]['fields'];
-                        var message_detail = {};
-                        for (var k = 0; k < fields.length; k++){
-                            message_detail[fields[k]] = req.body[fields[k]]
-                        }
-                        var index_name = 'logstash-' + rs[i];
-                        upload_data = {
-                            'action_type': ops['operations'][r][j]['action_type'],
-                            'message': message_detail,
-                            '@metadata': {'index_name': index_name, 'document_type': ops['operations'][r][j]['action_type']}
-                        };
-                        redis_client.rpush('logstash:list', JSON.stringify(upload_data));
-                        res.send("Success")
-                    }
-                }
-                if (is_correct_operations == false){
-                    logger.error("Operation %s is not correct", req.body.type);
-                    res.send("Error! Operation is not correct");
-                }
+// app.set('trust proxy', function (ip) {
+//     if (ip === '10.105.57.202' || ip === '10.105.19.248')
+//         return true; // trusted IPs
+//     else
+//         return false;
+// });
+// app.set('trust proxy', function (ip) {
+//     if (ip === '127.0.0.1' || ip === '123.123.123.123') return true; // trusted IPs
+//     else return false;
+// })
+
+app.post('/:opid', function (req, res) {
+    var opid = req.params.opid;
+    var index_name = 'logstash-report';
+    var message_detail;
+    var message_array = {};
+    req_headers = req.headers;
+    req_cookies = req.cookies;
+    req_body = req.body;
+    req_ip = req.ips;
+
+    var device = req.body['device'];
+    if (!device){
+        if (!isEmpty(req_headers)){
+            if (req_headers.hasOwnProperty('device')){
+                device = req_headers['device']
             }
         }
     }
-    if (is_correct_rout == false){
-        logger.error("Route %s is not correct", r);
-        res.send("Error! Route is not correct");
+    if (!device){
+        if (!isEmpty(req_cookies)){
+            if (req_cookies.hasOwnProperty('device')){
+                device = req_cookies['device']
+            }
+        }
+    }
+    if (device){
+        var b = new Buffer(device, 'base64');
+        device = b.toString();
+        device = JSON.stringify(device);
+        for (var index in device){
+            message_array[index] = device[index]
+        }
+    }
+
+    message_array = req_body;
+    message_array['ip'] = req_ip;
+    message_array['action_type'] = req_body['type'];
+    message_array['message'] = message_detail;
+    message_array['@metadata'] = {'index_name': index_name, 'document_type': req_body['type']};
+    redis_client.rpush('logstash:list', JSON.stringify(message_array));
+    res.send("Success");
+
+    function isEmpty(obj)
+    {
+        for (var name in obj)
+        {
+            return false;
+        }
+        return true;
     }
 });
 
