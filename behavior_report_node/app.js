@@ -75,13 +75,13 @@ app.post('/:opid', function (req, res) {
     }
 
     message_array = req_body;
+    if (message_array.hasOwnProperty('type'))delete message_array['type'];
     message_array['ip'] = msg_ip;
     message_array['action_type'] = req_body['type'];
     message_array['message'] = message_detail;
     message_array['@metadata'] = {'index_name': index_name, 'document_type': req_body['type']};
     redis_client.rpush('logstash:list', JSON.stringify(message_array));
     res.send("Success");
-
     function isEmpty(obj)
     {
         for (var name in obj)
