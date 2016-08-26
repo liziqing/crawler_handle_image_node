@@ -4,6 +4,7 @@ var redis = require('redis');
 var winston = require('winston');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
+const  cluster = require('cluster');
 
 var logger = new (winston.Logger)({
     transports: [
@@ -13,8 +14,24 @@ var logger = new (winston.Logger)({
     ]
 });
 
-var configHandler = require("./confighandler");
+if (cluster.isMaster) {
+    // calculate number of proccesses to fork
+    var num_cpus = require('os').cpus().length;
+    var num_processes = Math.max(1, num_cpus - 1);
+    logger.error('Master starts with %d processes.', num_processes);
+    for (var i = 0; i < num_processes; i++) {
+        cluster.fork();
+    }
+    // Listen for dying processes
+    cluster.on('exit', function(worker, code, signal) {
+        logger.error('A process(pid=%s) of master died (%s). Restarting...',
+            worker.process.pid, signal || code);
+        cluster.fork();
+    });
+    return;
+}
 
+var configHandler = require("./confighandler");
 var config = configHandler.getConfig();
 var redis_client = redis.createClient(
     config['redis']['port'],
