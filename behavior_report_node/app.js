@@ -20,6 +20,9 @@ var redis_client = redis.createClient(
     config['redis']['port'],
     config['redis']['host'],
     config['redis']['options']);
+var hostname = config['host'];
+var port = config['port'];
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -32,8 +35,12 @@ app.set('trust proxy', function (ip) {
         return false;
 });
 
-app.post('/:opid', function (req, res) {
+app.get('/', function (req, res) {
+    res.send('Hello world');
+});
 
+app.post('/:opid', function (req, res) {
+    res.send("Success");
     var opid = req.params.opid;
     var index_name = 'logstash-report';
     var message_detail;
@@ -81,7 +88,7 @@ app.post('/:opid', function (req, res) {
     message_array['message'] = message_detail;
     message_array['@metadata'] = {'index_name': index_name, 'document_type': req_body['type']};
     redis_client.rpush('logstash:list', JSON.stringify(message_array));
-    res.send("Success");
+
     function isEmpty(obj)
     {
         for (var name in obj)
@@ -92,9 +99,9 @@ app.post('/:opid', function (req, res) {
     }
 });
 
-var server = app.listen(6000, function () {
+var server = app.listen(port, hostname, function () {
     var host = server.address().address;
     var port = server.address().port;
-    console.log('Example app listening at http://%s:%s', host, port);
+    console.log('App listening at http://%s:%s', host, port);
 });
 
