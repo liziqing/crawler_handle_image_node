@@ -51,8 +51,8 @@ app.post('/:opid', function (req, res) {
     req_ips = req.ips;
     req_ip = req.ip;
 
-    if (req_ips.hasOwnProperty('X_FORWARDED_FOR')){
-        msg_ip = req_ips['X_FORWARDED_FOR']
+    if (req_headers.hasOwnProperty('x-forwarded-for')){
+        msg_ip = req_headers['x-forwarded-for']
     }
     else
         msg_ip = req_ip;
