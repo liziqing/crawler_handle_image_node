@@ -21,7 +21,7 @@ var redis_client = redis.createClient(
     config['redis']['host'],
     config['redis']['options']);
 var hostname = config['host'];
-var port = config['port']
+var port = config['port'];
 
 
 app.use(bodyParser.json());
