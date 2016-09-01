@@ -40,7 +40,14 @@ app.get('/', function (req, res) {
 });
 
 app.post('/:opid', function (req, res) {
-    res.send("Success");
+    res.send({
+        "code": 0,
+        "message": "success",
+        "data": {
+            "total": 0,
+            "list": []
+        }
+    });
     var opid = req.params.opid;
     var index_name = 'logstash-report';
     var message_detail;
