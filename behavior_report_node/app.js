@@ -48,6 +48,7 @@ app.get('/:opid', function (req, res) {
     req_query =req.query;
     req_ips = req.ips;
     req_ip = req.ip;
+    message_array = JSON.parse(JSON.stringify(req_query));
 
     if (req_headers.hasOwnProperty('x-forwarded-for')){
         msg_ip = req_headers['x-forwarded-for']
@@ -73,18 +74,22 @@ app.get('/:opid', function (req, res) {
     if (device){
         var b = new Buffer(device, 'base64');
         device = b.toString();
-        device = JSON.stringify(device);
+        device = JSON.parse(device);
         for (var index in device){
             message_array[index] = device[index]
         }
     }
 
-    message_array = JSON.parse(JSON.stringify(req_query));
-    if (message_array.hasOwnProperty('type'))delete message_array['type'];
+
+    if (message_array.hasOwnProperty('goods_id'))
+    {
+        message_array['goods-id'] = message_array['goods_id'];
+        delete message_array['goods_id'];
+    }
     message_array['ip'] = msg_ip;
-    message_array['action_type'] = req_query['type'];
-    message_array['message'] = message_detail;
-    message_array['@metadata'] = {'index_name': index_name, 'document_type': req_query['type']};
+    message_array['action_type'] = opid;
+    message_array['message'] = 'report';
+    message_array['@metadata'] = {'index_name': index_name, 'document_type': opid};
     redis_client.rpush('logstash:list', JSON.stringify(message_array));
 
     function isEmpty(obj)
@@ -109,6 +114,7 @@ app.post('/:opid', function (req, res) {
     req_body = req.body;
     req_ips = req.ips;
     req_ip = req.ip;
+    message_array = JSON.parse(JSON.stringify(req_body));
 
     if (req_headers.hasOwnProperty('x-forwarded-for')){
         msg_ip = req_headers['x-forwarded-for']
@@ -134,18 +140,22 @@ app.post('/:opid', function (req, res) {
     if (device){
         var b = new Buffer(device, 'base64');
         device = b.toString();
-        device = JSON.stringify(device);
+        device = JSON.parse(device);
         for (var index in device){
             message_array[index] = device[index]
         }
     }
 
-    message_array = JSON.parse(JSON.stringify(req_body));
-    if (message_array.hasOwnProperty('type'))delete message_array['type'];
+
+    if (message_array.hasOwnProperty('goods_id'))
+    {
+        message_array['goods-id'] = message_array['goods_id'];
+        delete message_array['goods_id'];
+    }
     message_array['ip'] = msg_ip;
-    message_array['action_type'] = req_body['type'];
-    message_array['message'] = message_detail;
-    message_array['@metadata'] = {'index_name': index_name, 'document_type': req_body['type']};
+    message_array['action_type'] = opid;
+    message_array['message'] = 'report';
+    message_array['@metadata'] = {'index_name': index_name, 'document_type': opid};
     redis_client.rpush('logstash:list', JSON.stringify(message_array));
 
     function isEmpty(obj)
