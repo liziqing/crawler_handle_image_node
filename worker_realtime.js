@@ -71,11 +71,11 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
 
         if(job.data.worker_type == 'realtime') {
           var md5_url = job.data.md5_url;
-          uploadColorImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+          uploadColorImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'color_flag': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
         }
         else if(job.data.worker_type == 'json'){
           var md5_url = 0;
-          uploadColorImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+          uploadColorImage(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'color_flag': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
         }
   	}
     else if(type == 'c_r'){
@@ -86,11 +86,11 @@ MongoClient.connect(mongo_url, function(err, admin_db) {
 
       if(job.data.worker_type == 'realtime') {
         var md5_url = job.data.md5_url;
-        uploadColorImageAgain(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+        uploadColorImageAgain(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'color_flag': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
       }
       else if(job.data.worker_type == 'json'){
         var md5_url = 0;
-        uploadColorImageAgain(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'name': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
+        uploadColorImageAgain(db, p_id, from_site, md5_url, {'from_site': from_site, 'show_product_id': p_id, 'color_flag': c_name}, from_site + "_" + p_id + "_" + c_name, cb);
       }
     }
     else if (type == 'i'){
