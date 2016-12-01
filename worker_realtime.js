@@ -445,7 +445,6 @@ var qiniuUpload = function(url, type, p_id, from_site, md5_url, bucket, key, que
             if (md5_url != 0) {
               redis_client.hset('shiji_shop_single_realtime:url:' + type, from_site + ':' + md5_url, 'imagefailed: ' + p_id + '; error:' + JSON.stringify(err));
             }
-              success_callback(key);
               //return queue_cb(err);
               // http://developer.qiniu.com/docs/v6/api/reference/codes.html
               queue_cb(err);
